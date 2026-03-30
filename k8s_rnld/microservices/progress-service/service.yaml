@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — progress-service Service
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: progress-service
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: progress-service
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: progress-service
+  ports:
+    - name: http
+      port: 5005
+      targetPort: 5005

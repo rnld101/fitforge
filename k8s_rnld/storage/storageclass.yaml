@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — StorageClass (local-path)
+#
+# Uses Rancher's local-path-provisioner for dynamic volume provisioning.
+# Each StatefulSet pod gets its own PVC automatically.
+#
+# ⚠️  PRODUCTION: Change reclaimPolicy to "Retain" to preserve data on PVC
+#     deletion. Current "Delete" policy is for testing only.
+#
+# 🔄 NFS MIGRATION: To switch from local-path to NFS, replace this file
+#    with the NFS StorageClass. See README.md for migration guide.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fitforge-storage
+  labels:
+    app.kubernetes.io/part-of: fitforge
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete          # ⚠️ Change to "Retain" for production
+volumeBindingMode: WaitForFirstConsumer
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 🔄 NFS StorageClass (uncomment below and remove local-path above to migrate)
+# ─────────────────────────────────────────────────────────────────────────────
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: fitforge-storage
+#   labels:
+#     app.kubernetes.io/part-of: fitforge
+# provisioner: nfs.csi.k8s.io          # Requires NFS CSI driver installed
+# reclaimPolicy: Retain
+# volumeBindingMode: Immediate
+# parameters:
+#   server: <NFS_SERVER_IP>             # e.g. 192.168.1.100
+#   share: /srv/nfs/fitforge            # NFS export path
+# mountOptions:
+#   - nfsvers=4.1

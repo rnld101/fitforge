@@ -1,0 +1,16 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — progress-service ConfigMap
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: progress-service-config
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: progress-service
+    app.kubernetes.io/part-of: fitforge
+data:
+  PORT: "5005"
+  MONGO_URI: "mongodb://mongo-0.mongo-headless.fitforge.svc.cluster.local:27017,mongo-1.mongo-headless.fitforge.svc.cluster.local:27017,mongo-2.mongo-headless.fitforge.svc.cluster.local:27017/progress_db?replicaSet=rs0"
+  REDIS_HOST: "redis.fitforge.svc.cluster.local"
+  REDIS_PORT: "6379"

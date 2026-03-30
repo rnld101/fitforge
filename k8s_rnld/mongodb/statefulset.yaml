@@ -1,0 +1,115 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — MongoDB StatefulSet (3 replicas, Replica Set)
+#
+# • 3 pods with stable identities: mongo-0, mongo-1, mongo-2
+# • Each pod gets its own PVC via volumeClaimTemplates
+# • Replica set initialization handled by init-job.yaml
+# • No authentication (internal cluster only) — add keyFile for production
+#
+# ⚠️ PROBES: Uses startupProbe with generous timeout to avoid race conditions.
+#    mongod may take 10-30s to initialize. The startupProbe allows up to 155s
+#    before marking the pod as failed. Liveness/readiness probes only run
+#    AFTER the startupProbe succeeds.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: database
+spec:
+  serviceName: mongo-headless
+  replicas: 3
+  podManagementPolicy: Parallel      # Start all 3 pods simultaneously (faster)
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mongodb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mongodb
+        app.kubernetes.io/part-of: fitforge
+        app.kubernetes.io/component: database
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: mongod
+          image: mongo:7.0
+          command:
+            - mongod
+            - "--replSet"
+            - rs0
+            - "--bind_ip_all"
+            - "--port"
+            - "27017"
+          ports:
+            - containerPort: 27017
+              name: mongodb
+
+          # ── Startup Probe (generous timeout — prevents race conditions) ──
+          # Allows up to 155 seconds (5s delay + 30 × 5s) for mongod to start.
+          # Liveness/readiness probes do NOT run until this passes.
+          startupProbe:
+            exec:
+              command:
+                - mongosh
+                - "--eval"
+                - "db.adminCommand('ping')"
+                - "--quiet"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+
+          # ── Liveness Probe (is mongod alive?) ────────────────────────────
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - "--eval"
+                - "db.adminCommand('ping')"
+                - "--quiet"
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # ── Readiness Probe (can mongod accept connections?) ─────────────
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - "--eval"
+                - "db.adminCommand('ping')"
+                - "--quiet"
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+
+  # ── Dynamic Volume Provisioning ────────────────────────────────────────────
+  # Each pod gets its own PVC: mongo-data-mongo-0, mongo-data-mongo-1, etc.
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data
+        labels:
+          app.kubernetes.io/name: mongodb
+          app.kubernetes.io/part-of: fitforge
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: fitforge-storage
+        resources:
+          requests:
+            storage: 5Gi

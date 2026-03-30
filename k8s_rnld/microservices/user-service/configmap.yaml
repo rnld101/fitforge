@@ -1,0 +1,14 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — user-service ConfigMap
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: user-service
+    app.kubernetes.io/part-of: fitforge
+data:
+  PORT: "5002"
+  MONGO_URI: "mongodb://mongo-0.mongo-headless.fitforge.svc.cluster.local:27017,mongo-1.mongo-headless.fitforge.svc.cluster.local:27017,mongo-2.mongo-headless.fitforge.svc.cluster.local:27017/user_db?replicaSet=rs0"

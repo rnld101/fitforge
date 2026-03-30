@@ -1,0 +1,95 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — MongoDB Replica Set Init Script (ConfigMap)
+#
+# This script runs inside the init Job (init-job.yaml).
+# It waits for all 3 mongod instances to be reachable, then initializes
+# the replica set with rs.initiate(). Fully idempotent — safe to re-run.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-init-script
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/part-of: fitforge
+data:
+  rs-init.sh: |
+    #!/bin/bash
+    set -e
+
+    NAMESPACE="fitforge"
+    HEADLESS_SVC="mongo-headless"
+    RS_NAME="rs0"
+    MEMBERS=3
+
+    echo "=== MongoDB Replica Set Initialization ==="
+    echo "Replica Set: ${RS_NAME}"
+    echo "Members: ${MEMBERS}"
+    echo ""
+
+    # ── Step 1: Wait for all mongod instances to be reachable ──────────────
+    for i in $(seq 0 $((MEMBERS - 1))); do
+      HOST="mongo-${i}.${HEADLESS_SVC}.${NAMESPACE}.svc.cluster.local:27017"
+      echo "Waiting for ${HOST} ..."
+      RETRIES=0
+      MAX_RETRIES=60
+      until mongosh --host "${HOST}" --eval "db.adminCommand('ping')" --quiet 2>/dev/null; do
+        RETRIES=$((RETRIES + 1))
+        if [ ${RETRIES} -ge ${MAX_RETRIES} ]; then
+          echo "ERROR: ${HOST} not reachable after ${MAX_RETRIES} attempts. Exiting."
+          exit 1
+        fi
+        sleep 3
+      done
+      echo "  ✓ ${HOST} is ready"
+    done
+
+    echo ""
+    echo "All ${MEMBERS} mongod instances are reachable."
+    echo ""
+
+    # ── Step 2: Check if replica set is already initialized ────────────────
+    PRIMARY_HOST="mongo-0.${HEADLESS_SVC}.${NAMESPACE}.svc.cluster.local:27017"
+
+    RS_STATUS=$(mongosh --host "${PRIMARY_HOST}" --eval "rs.status().ok" --quiet 2>/dev/null || echo "0")
+
+    if [ "${RS_STATUS}" = "1" ]; then
+      echo "✓ Replica set '${RS_NAME}' is already initialized. Skipping."
+      mongosh --host "${PRIMARY_HOST}" --eval "rs.status().members.forEach(m => print('  ' + m.name + ' → ' + m.stateStr))" --quiet
+      exit 0
+    fi
+
+    # ── Step 3: Initialize the replica set ─────────────────────────────────
+    echo "Initializing replica set '${RS_NAME}' ..."
+
+    mongosh --host "${PRIMARY_HOST}" --eval "
+      rs.initiate({
+        _id: '${RS_NAME}',
+        members: [
+          { _id: 0, host: 'mongo-0.${HEADLESS_SVC}.${NAMESPACE}.svc.cluster.local:27017' },
+          { _id: 1, host: 'mongo-1.${HEADLESS_SVC}.${NAMESPACE}.svc.cluster.local:27017' },
+          { _id: 2, host: 'mongo-2.${HEADLESS_SVC}.${NAMESPACE}.svc.cluster.local:27017' }
+        ]
+      })
+    "
+
+    # ── Step 4: Wait for primary election ──────────────────────────────────
+    echo ""
+    echo "Waiting for primary election ..."
+    RETRIES=0
+    MAX_RETRIES=30
+    until mongosh --host "${PRIMARY_HOST}" --eval "rs.isMaster().ismaster" --quiet 2>/dev/null | grep -q "true"; do
+      RETRIES=$((RETRIES + 1))
+      if [ ${RETRIES} -ge ${MAX_RETRIES} ]; then
+        echo "WARNING: Primary election took longer than expected. Check manually."
+        break
+      fi
+      sleep 3
+    done
+
+    echo ""
+    echo "=== Replica Set Status ==="
+    mongosh --host "${PRIMARY_HOST}" --eval "rs.status().members.forEach(m => print('  ' + m.name + ' → ' + m.stateStr))" --quiet
+    echo ""
+    echo "✓ MongoDB Replica Set initialization complete!"

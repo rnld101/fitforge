@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — user-service Service
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: user-service
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: user-service
+  ports:
+    - name: http
+      port: 5002
+      targetPort: 5002

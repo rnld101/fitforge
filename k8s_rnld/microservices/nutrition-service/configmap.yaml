@@ -1,0 +1,14 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — nutrition-service ConfigMap
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nutrition-service-config
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: nutrition-service
+    app.kubernetes.io/part-of: fitforge
+data:
+  PORT: "5004"
+  MONGO_URI: "mongodb://mongo-0.mongo-headless.fitforge.svc.cluster.local:27017,mongo-1.mongo-headless.fitforge.svc.cluster.local:27017,mongo-2.mongo-headless.fitforge.svc.cluster.local:27017/nutrition_db?replicaSet=rs0"

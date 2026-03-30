@@ -1,0 +1,24 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — MongoDB ClusterIP Service
+#
+# Standard ClusterIP service for general connectivity.
+# Microservices use the full replica set connection string (via ConfigMaps)
+# for proper primary/secondary routing.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: mongodb
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017

@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — ai-agent-service Deployment
+#
+# ⚠️  REMINDER: This service requires GOOGLE_API_KEY to function.
+#     Update the secret in secrets/app-secrets.yaml before deploying.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-agent-service
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: ai-agent-service
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ai-agent-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ai-agent-service
+        app.kubernetes.io/part-of: fitforge
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: ai-agent-service
+          image: fitforge/ai-agent-service:latest
+          ports:
+            - containerPort: 5006
+              name: http
+          envFrom:
+            - configMapRef:
+                name: ai-agent-service-config
+            - secretRef:
+                name: fitforge-app-secrets
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 5006
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 12
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5006
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5006
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

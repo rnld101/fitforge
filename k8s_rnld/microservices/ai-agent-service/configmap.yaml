@@ -1,0 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — ai-agent-service ConfigMap
+#
+# ⚠️  REMINDER: You must set GOOGLE_API_KEY in secrets/app-secrets.yaml
+#     before deploying this service. Get your key from https://ai.google.dev/
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-agent-service-config
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: ai-agent-service
+    app.kubernetes.io/part-of: fitforge
+data:
+  PORT: "5006"
+  AUTH_SERVICE_URL: "http://auth-service.fitforge.svc.cluster.local:5001"

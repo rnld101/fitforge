@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — nutrition-service Service
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: nutrition-service
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: nutrition-service
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nutrition-service
+  ports:
+    - name: http
+      port: 5004
+      targetPort: 5004

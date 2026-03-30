@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — Frontend Service (NodePort)
+#
+# This is the ONLY externally accessible service.
+# Maps port 80 → nginx container port 3000.
+#
+# Access via: http://<NODE_IP>:<NODE_PORT>
+# The NodePort is auto-assigned (30000-32767 range).
+# To use a fixed port, uncomment the nodePort line below.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: frontend
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      # nodePort: 30080              # Uncomment for a fixed NodePort

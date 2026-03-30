@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — workout-service Deployment
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workout-service
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: workout-service
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: workout-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: workout-service
+        app.kubernetes.io/part-of: fitforge
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: workout-service
+          image: fitforge/workout-service:latest
+          ports:
+            - containerPort: 5003
+              name: http
+          envFrom:
+            - configMapRef:
+                name: workout-service-config
+            - secretRef:
+                name: fitforge-app-secrets
+
+          startupProbe:
+            httpGet:
+              path: /workout/health
+              port: 5003
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+
+          livenessProbe:
+            httpGet:
+              path: /workout/health
+              port: 5003
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /workout/health
+              port: 5003
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

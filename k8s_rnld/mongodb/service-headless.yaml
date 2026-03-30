@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FitForge — MongoDB Headless Service
+#
+# Provides stable DNS names for each StatefulSet pod:
+#   mongo-0.mongo-headless.fitforge.svc.cluster.local
+#   mongo-1.mongo-headless.fitforge.svc.cluster.local
+#   mongo-2.mongo-headless.fitforge.svc.cluster.local
+#
+# Required for MongoDB replica set member discovery.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-headless
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/part-of: fitforge
+    app.kubernetes.io/component: database
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true    # Pods discoverable even before Ready
+  selector:
+    app.kubernetes.io/name: mongodb
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
