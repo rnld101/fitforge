@@ -1,0 +1,69 @@
+architecture: replicaset
+ 
+auth:
+  enabled: true
+ 
+  # Root credentials (same as your Secret)
+  rootUser: root
+  rootPassword: RootPass@123
+ 
+  # Replica set key (used internally between nodes)
+  replicaSetKey: RootPass@123
+ 
+  # Default DB (optional, matches your pattern)
+  database: admin
+ 
+replicaCount: 3
+ 
+replicaSetName: rs0
+ 
+image:
+  tag: 7.0
+ 
+persistence:
+  enabled: true
+  storageClass: fitness-sc
+  size: 5Gi
+ 
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 250m
+  limits:
+    memory: 1Gi
+    cpu: 900m
+ 
+# Init scripts (equivalent to your ConfigMap init.js)
+initdbScripts:
+  init.js: |
+    function createUserIfNotExists(dbName, userName, userPwd, roles) {
+      var targetDb = db.getSiblingDB(dbName);
+      var existingUsers = targetDb.getUsers({ filter: { user: userName } });
+      if (existingUsers.users && existingUsers.users.length > 0) {
+        print("User '" + userName + "' already exists in '" + dbName + "'. Skipping.");
+      } else {
+        targetDb.createUser({
+          user: userName,
+          pwd: userPwd,
+          roles: roles
+        });
+        print("Created user '" + userName + "' in '" + dbName + "'.");
+      }
+    }
+ 
+    createUserIfNotExists('auth_db',      'auth_user',      'AuthPass@3',  [{ role: 'readWrite', db: 'auth_db' }]);
+    createUserIfNotExists('user_db',      'user_user',      'UserPass@3',  [{ role: 'readWrite', db: 'user_db' }]);
+    createUserIfNotExists('workout_db',   'workout_user',   'WorkPass@3',  [{ role: 'readWrite', db: 'workout_db' }]);
+    createUserIfNotExists('nutrition_db', 'nutrition_user', 'NutriPass@3', [{ role: 'readWrite', db: 'nutrition_db' }]);
+    createUserIfNotExists('progress_db',  'progress_user',  'ProgPass@3',  [{ role: 'readWrite', db: 'progress_db' }]);
+ 
+# Service configuration (Headless like your mongo-service)
+service:
+  name: mongo-service
+  type: ClusterIP
+  clusterIP: None   # Headless service
+ 
+# Extra flags to match your StatefulSet command
+extraFlags:
+  - "--replSet=rs0"
+  - "--bind_ip_all"
