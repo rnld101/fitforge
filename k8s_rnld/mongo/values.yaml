@@ -31,12 +31,10 @@ replicaCount: 3
  
 replicaSetName: rs0
  
-image:
-  tag: 7.0
- 
 persistence:
   enabled: true
-  storageClass: fitness-sc
+  # Update storageclassname
+  storageClass: local-path
   size: 5Gi
  
 resources:
