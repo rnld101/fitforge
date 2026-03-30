@@ -1,81 +1,86 @@
 architecture: replicaset
  
-auth:
-  enabled: true
- 
-  # Root credentials (same as your Secret)
-  rootUser: root
-  rootPassword: RootPass@123
- 
-  # Replica set key (used internally between nodes)
-  replicaSetKey: RootPass@123
- 
-  # Default DB (optional, matches your pattern)
-  database: admin
-
-  usernames:
-  - auth_user
-  - user_user
-  - workout_user
-  - nutrition_user
-  - progress_user
-
-  databases:
-  - auth_db
-  - user_db
-  - workout_db
-  - nutrition_db
-  - progress_db
- 
 replicaCount: 3
  
 replicaSetName: rs0
  
-persistence:
+auth:
+
   enabled: true
-  # Update storageclassname
-  storageClass: local-path
+ 
+  # Root credentials
+
+  rootUser: root
+
+  rootPassword: RootPass@123
+ 
+  # Required for internal replica set communication
+
+  replicaSetKey: RootPass@123
+ 
+  # Application users (mapped 1:1)
+
+  usernames:
+
+    - auth_user
+
+    - user_user
+
+    - workout_user
+
+    - nutrition_user
+
+    - progress_user
+ 
+  passwords:
+
+    - AuthPass@3
+
+    - UserPass@3
+
+    - WorkPass@3
+
+    - NutriPass@3
+
+    - ProgPass@3
+ 
+  databases:
+
+    - auth_db
+
+    - user_db
+
+    - workout_db
+
+    - nutrition_db
+
+    - progress_db
+ 
+persistence:
+
+  enabled: true
+
+  storageClass: local-path   # change if needed
+
   size: 5Gi
  
 resources:
+
   requests:
-    memory: 256Mi
+
     cpu: 250m
+
+    memory: 256Mi
+
   limits:
-    memory: 1Gi
+
     cpu: 900m
+
+    memory: 1Gi
  
-# Init scripts (equivalent to your ConfigMap init.js)
-initdbScripts:
-  init.js: |
-    function createUserIfNotExists(dbName, userName, userPwd, roles) {
-      var targetDb = db.getSiblingDB(dbName);
-      var existingUsers = targetDb.getUsers({ filter: { user: userName } });
-      if (existingUsers.users && existingUsers.users.length > 0) {
-        print("User '" + userName + "' already exists in '" + dbName + "'. Skipping.");
-      } else {
-        targetDb.createUser({
-          user: userName,
-          pwd: userPwd,
-          roles: roles
-        });
-        print("Created user '" + userName + "' in '" + dbName + "'.");
-      }
-    }
- 
-    createUserIfNotExists('auth_db',      'auth_user',      'AuthPass@3',  [{ role: 'readWrite', db: 'auth_db' }]);
-    createUserIfNotExists('user_db',      'user_user',      'UserPass@3',  [{ role: 'readWrite', db: 'user_db' }]);
-    createUserIfNotExists('workout_db',   'workout_user',   'WorkPass@3',  [{ role: 'readWrite', db: 'workout_db' }]);
-    createUserIfNotExists('nutrition_db', 'nutrition_user', 'NutriPass@3', [{ role: 'readWrite', db: 'nutrition_db' }]);
-    createUserIfNotExists('progress_db',  'progress_user',  'ProgPass@3',  [{ role: 'readWrite', db: 'progress_db' }]);
- 
-# Service configuration (Headless like your mongo-service)
 service:
-  name: mongo-service
+
   type: ClusterIP
-  clusterIP: None   # Headless service
+
+  clusterIP: None   # Headless service (required for StatefulSet)
  
-# Extra flags to match your StatefulSet command
-extraFlags:
-  - "--replSet=rs0"
-  - "--bind_ip_all"
