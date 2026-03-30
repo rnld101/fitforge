@@ -12,6 +12,20 @@ auth:
  
   # Default DB (optional, matches your pattern)
   database: admin
+
+  usernames:
+  - auth_user
+  - user_user
+  - workout_user
+  - nutrition_user
+  - progress_user
+
+  databases:
+  - auth_db
+  - user_db
+  - workout_db
+  - nutrition_db
+  - progress_db
  
 replicaCount: 3
  
