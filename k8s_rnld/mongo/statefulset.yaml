@@ -67,8 +67,6 @@ spec:
         resources:
           requests: 
             storage: "3Gi"
-          limits:
-            storage: "3Gi"
         storageClassName: nfs
     
 
