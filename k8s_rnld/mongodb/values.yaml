@@ -13,7 +13,7 @@ architecture: replicaset
 
 # ── Replica Count ────────────────────────────────────────────────────────────
 # Number of MongoDB nodes in the replica set (1 primary + 2 secondaries).
-replicaCount: 3
+replicaCount: 2 
 
 # ── Image ────────────────────────────────────────────────────────────────────
 # By default, the chart uses the perfectly matched Bitnami MongoDB tag 
@@ -73,8 +73,8 @@ persistence:
 # This prevents noisy-neighbor issues and ensures predictable performance.
 resources:
   requests:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 200m
+    memory: 512Mi
   limits:
     cpu: 500m
     memory: 1Gi
@@ -126,3 +126,27 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "9216"
   prometheus.io/path: "/metrics"
+
+# ── Probes (IMPORTANT FIX) ─────────────────────────────────────────────
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 120
+  periodSeconds: 20
+  timeoutSeconds: 10
+  failureThreshold: 6
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+# 🚀 BEST PRACTICE (for databases)
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 60
