@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: aswin018/k8s_mern_app_auth-service:v2
+          image: aswin018/k8s_mern_app_auth-service:v3
           ports:
             - containerPort: 5001
               name: http

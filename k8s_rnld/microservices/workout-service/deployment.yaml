@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: workout-service
-          image: aswin018/k8s_mern_app_workout-service:v2
+          image: aswin018/k8s_mern_app_workout-service:v3
           ports:
             - containerPort: 5003
               name: http

@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: aswin018/k8s_mern_app_frontend:v2
+          image: aswin018/k8s_mern_app_frontend:v3
           ports:
             - containerPort: 3000
               name: http

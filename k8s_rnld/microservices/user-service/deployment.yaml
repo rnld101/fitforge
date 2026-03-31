@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: aswin018/k8s_mern_app_user-service:v2
+          image: aswin018/k8s_mern_app_user-service:v3
           ports:
             - containerPort: 5002
               name: http

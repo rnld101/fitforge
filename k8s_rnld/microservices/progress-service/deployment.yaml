@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: progress-service
-          image: aswin018/k8s_mern_app_progress-service:v2
+          image: aswin018/k8s_mern_app_progress-service:v3
           ports:
             - containerPort: 5005
               name: http

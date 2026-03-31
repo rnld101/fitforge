@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: nutrition-service
-          image: aswin018/k8s_mern_app_nutrition-service:v2
+          image: aswin018/k8s_mern_app_nutrition-service:v3
           ports:
             - containerPort: 5004
               name: http

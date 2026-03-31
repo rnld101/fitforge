@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: ai-agent-service
-          image: aswin018/k8s_mern_app_ai-agent-service:v4
+          image: aswin018/k8s_mern_app_ai-agent-service:v5
           ports:
             - containerPort: 5006
               name: http
