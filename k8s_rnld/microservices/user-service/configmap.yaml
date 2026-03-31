@@ -8,4 +8,4 @@ metadata:
     app.kubernetes.io/part-of: fitforge
 data:
   PORT: "5002"
-  MONGO_URI: "mongodb://mongodb-headless.fitforge.svc.cluster.local:27017/progress_db?replicaSet=rs0"
+  MONGO_URI: "mongodb://user_user:UserPass123@mongodb-headless.fitforge.svc.cluster.local:27017/user_db?replicaSet=rs0&authSource=user_db"

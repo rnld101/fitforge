@@ -13,7 +13,7 @@ architecture: replicaset
 
 # ── Replica Count ────────────────────────────────────────────────────────────
 # Number of MongoDB nodes in the replica set (1 primary + 2 secondaries).
-replicaCount: 2 
+replicaCount: 2
 
 # ── Image ────────────────────────────────────────────────────────────────────
 # By default, the chart uses the perfectly matched Bitnami MongoDB tag 
@@ -128,25 +128,21 @@ podAnnotations:
   prometheus.io/path: "/metrics"
 
 # ── Probes (IMPORTANT FIX) ─────────────────────────────────────────────
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 180   # ~30 mins safety
+
+readinessProbe:
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 12
 
 livenessProbe:
-  enabled: true
-  initialDelaySeconds: 120
+  initialDelaySeconds: 180
   periodSeconds: 20
   timeoutSeconds: 10
   failureThreshold: 6
-
-readinessProbe:
-  enabled: true
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 6
-
-# 🚀 BEST PRACTICE (for databases)
-startupProbe:
-  enabled: true
-  initialDelaySeconds: 10
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 60

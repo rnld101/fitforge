@@ -8,6 +8,6 @@ metadata:
     app.kubernetes.io/part-of: fitforge
 data:
   PORT: "5005"
-  MONGO_URI: "mongodb://mongodb-headless.fitforge.svc.cluster.local:27017/progress_db?replicaSet=rs0"
+  MONGO_URI: "mongodb://progress_user:ProgPass123@mongodb-headless.fitforge.svc.cluster.local:27017/progress_db?replicaSet=rs0&authSource=progress_db"
   REDIS_HOST: "redis.fitforge.svc.cluster.local"
   REDIS_PORT: "6379"
