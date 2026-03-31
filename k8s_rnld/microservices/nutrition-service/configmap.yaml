@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nutrition-service-config
+  namespace: fitforge
+  labels:
+    app.kubernetes.io/name: nutrition-service
+    app.kubernetes.io/part-of: fitforge
+data:
+  PORT: "5004"
+  MONGO_URI: "mongodb://mongodb-headless.fitforge.svc.cluster.local:27017/progress_db?replicaSet=rs0"

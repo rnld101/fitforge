@@ -1,0 +1,128 @@
+# =============================================================================
+# Bitnami MongoDB Helm Chart — values.yaml
+# =============================================================================
+# Chart:   bitnami/mongodb
+# Docs:    https://artifacthub.io/packages/helm/bitnami/mongodb
+# Purpose: Deploy a 3-node MongoDB ReplicaSet for the FitForge platform
+# =============================================================================
+
+# ── Architecture ─────────────────────────────────────────────────────────────
+# "replicaset" deploys a StatefulSet with N replicas + automatic election.
+# The Bitnami chart handles keyFile configuration internally.
+architecture: replicaset
+
+# ── Replica Count ────────────────────────────────────────────────────────────
+# Number of MongoDB nodes in the replica set (1 primary + 2 secondaries).
+replicaCount: 3
+
+# ── Image ────────────────────────────────────────────────────────────────────
+# By default, the chart uses the perfectly matched Bitnami MongoDB tag 
+# (e.g. 7.0.x-debian-12-rX). Do NOT override with just "7.0" as it doesn't exist.
+# image:
+#   registry: docker.io
+#   repository: bitnami/mongodb
+#   tag: "7.0"
+#   pullPolicy: IfNotPresent
+
+# ── Authentication ───────────────────────────────────────────────────────────
+# All credentials are sourced from a pre-existing Kubernetes Secret managed
+# by Sealed Secrets. The chart will NOT generate its own secrets.
+#
+# Required keys in the Secret:
+#   mongodb-root-password, mongodb-passwords,
+#   mongodb-metrics-password, mongodb-replica-set-key
+auth:
+  enabled: true
+
+  # Name of the Kubernetes Secret containing all credential keys.
+  # This Secret is created by the SealedSecret controller from
+  # mongodb-sealed-secret.yaml → mongodb-secret
+  existingSecret: mongodb-secret
+
+  # Application-level user(s) created on first boot.
+  # Passwords come from the "mongodb-passwords" key (comma-separated, 1:1 mapping).
+  usernames:
+    - auth_user
+    - user_user
+    - workout_user
+    - nutrition_user
+    - progress_user
+  databases:
+    - auth_db
+    - user_db
+    - workout_db
+    - nutrition_db
+    - progress_db
+
+# ── Replica Set Name ────────────────────────────────────────────────────────
+# Explicit name for the replica set. All members use this to identify the set.
+replicaSetName: rs0
+
+# ── Persistence ──────────────────────────────────────────────────────────────
+# Each replica gets its own PVC via the StatefulSet volumeClaimTemplate.
+# Uses the existing NFS dynamic provisioner StorageClass.
+persistence:
+  enabled: true
+  storageClass: nfs
+  accessModes:
+    - ReadWriteOnce
+  size: 5Gi
+
+# ── Resources (Guaranteed QoS) ──────────────────────────────────────────────
+# requests == limits → Kubernetes assigns "Guaranteed" QoS class.
+# This prevents noisy-neighbor issues and ensures predictable performance.
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# ── Arbiter ──────────────────────────────────────────────────────────────────
+# Disable the arbiter since we have 3 full data-bearing nodes (odd count
+# is sufficient for majority elections without an arbiter).
+arbiter:
+  enabled: false
+
+# ── Metrics / MongoDB Exporter ───────────────────────────────────────────────
+# Enables a sidecar container running the MongoDB exporter (bitnami/mongodb-exporter).
+# Exposes Prometheus-compatible metrics on port 9216.
+metrics:
+  enabled: true
+
+  # Resources for the exporter sidecar (also Guaranteed QoS).
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+  # Prometheus scrape annotations on the pods so that Prometheus or OTel
+  # can auto-discover and scrape the metrics endpoint.
+  service:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9216"
+      prometheus.io/path: "/metrics"
+
+  # ServiceMonitor for Prometheus Operator (enable if you use it)
+  serviceMonitor:
+    enabled: false
+
+# ── Pod Labels ───────────────────────────────────────────────────────────────
+# Additional labels applied to every MongoDB pod for easy selection
+# by OTel Collector, network policies, etc.
+podLabels:
+  app.kubernetes.io/part-of: fitforge
+  app.kubernetes.io/component: database
+
+# ── Pod Annotations ──────────────────────────────────────────────────────────
+# Prometheus scrape annotations directly on the pods (redundant with metrics
+# service annotations, but ensures discovery via both pod and service scraping).
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9216"
+  prometheus.io/path: "/metrics"

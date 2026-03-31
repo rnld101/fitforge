@@ -1,0 +1,15 @@
+1. Create namespace fitforge
+2. Write values.yaml & secrets.yaml
+3. helm repo add bitnami https://charts.bitnami.com/bitnami
+4. helm repo update
+5. helm install mongodb bitnami/mongodb \
+  --namespace fitforge \
+  --create-namespace \
+  --values values.yaml
+
+TROUBLESHOOTING
+1. Tweak readynes, livekiness and startup probes duration
+2. Reduce no of replicas
+3. Increase no of nodes
+4. Check nodeaffinity, and trying to schedule on seperate nodes, but failing
+5. Error in creating the pv
